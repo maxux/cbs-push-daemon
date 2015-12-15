@@ -277,40 +277,6 @@ var CbsWebRouting = function(sql, apnLink) {
 			});
 		});
 	}
-	
-	//
-	// debug
-	//
-	this.debug = function(req, res) {
-		var self = this;
-		
-		self.res = res;
-		self.uid = req.body.uid;
-		self.sql = sql;
-		self.apnLink = apnLink;
-		
-		console.log('[+] api: debug')
-		
-		root.sql.query({
-			sql: 'SELECT * FROM cbs_notifications -- WHERE uid = ?',
-			// values: [self.uid]
-			
-		}, function (error, results, fields) {
-			if (error) throw error;
-			
-			if(results.length == 0) {
-				console.log('[-] no devices found');
-				return invalid(self, {'message': 'no devices found'});
-			}
-			
-			for(var i in results) {
-				var notif = results[i];
-				notifier(self.apnLink, notif.device, {title: 'Nouvelle notification'});
-			}
-			
-			return success(self, {'message': 'notifications sent'});
-		});
-	}
 }
 
 module.exports = CbsWebRouting;
