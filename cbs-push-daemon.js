@@ -5,23 +5,38 @@ var bodyParser = require('body-parser');
 var cbsRouter = require('./cbs-routing.js');
 var redis = require("redis")
 
+//
+// global production variable
+//
+var productionapp = true;
+
 console.log('[+] initializing')
+
+if(!productionapp) {
+	console.log("[!]")
+	console.log("[!] initializing debug environment")
+	console.log("[!]")
+}
+
+var apnscert  = productionapp ? 'certificates/cbs-push-prod.pem' : 'certificates/cbs-push.pem';
+var apnskey   = productionapp ? 'certificates/cbs-push-prod.pem' : 'certificates/cbs-push.pem';
+var sqldb     = productionapp ? 'cbseraing' : 'cbseraing-debug';
+var redischan = productionapp ? 'cbs-push' : 'cbs-push-debug';
+var webport   = productionapp ? 45887 : 45880;
 
 //
 // Apple Notifications
 //
 var options = {
-	// cert: 'certificates/cbs-push.pem',
-	// key: 'certificates/cbs-push.pem',
-	cert: 'certificates/cbs-push-prod.pem',
-	key: 'certificates/cbs-push-prod.pem',
+	cert: apnscert,
+	key: apnskey,
 	passphrase: '',
 	batchFeedback: true,
     interval: 20,
-    production: true
+    production: productionapp,
 };
 
-console.log('[+] connecting push server')
+console.log('[+] connecting push server (' + apnscert + ')')
 var apnConnection = new apn.Connection(options);
 
 console.log('[+] connecting to feedback service')
@@ -38,10 +53,10 @@ feedback.on("feedback", function(devices) {
 // MySQL
 //
 var sql = mysql.createConnection({
-	host: 'localhost',
+	host: '',
 	user: '',
 	password: '',
-	database: ''
+	database: sqldb,
 });
 
 console.log('[+] connecting mysql server')
@@ -52,7 +67,7 @@ setInterval(function() {
 		if (err) throw err;
 		console.log('[+] mysql still alive');
 	})
-	
+
 }, 180 * 1000);
 
 //
@@ -68,7 +83,7 @@ app.post('/api/devices/register', routes.newdevice);
 app.post('/api/debug', routes.debug);
 
 console.log('[+] starting web server')
-app.listen(45887);
+app.listen(webport);
 
 //
 // Redis
